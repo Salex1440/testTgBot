@@ -7,6 +7,8 @@ import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.UpdatesListener;
 import com.pengrad.telegrambot.model.Update;
+import com.pengrad.telegrambot.model.request.InlineKeyboardButton;
+import com.pengrad.telegrambot.model.request.InlineKeyboardMarkup;
 import com.pengrad.telegrambot.request.BaseRequest;
 import com.pengrad.telegrambot.request.GetUpdates;
 import com.pengrad.telegrambot.request.SendMessage;
@@ -27,7 +29,17 @@ import java.util.Map;
 public class Main {
 
 
-    public static Response sendRequest(String url, String method, Map<String, String> params) throws IOException {
+    public static String toParamValue(Object obj) {
+        if (obj.getClass().isPrimitive() ||
+                obj.getClass().isEnum() ||
+                obj.getClass().getName().startsWith("java.lang")) {
+            return String.valueOf(obj);
+        }
+        Gson gson = new Gson();
+        return gson.toJson(obj);
+    }
+
+    public static Response sendRequest(String url, String method, Map<String, Object> params) throws IOException {
         OkHttpClient client = new OkHttpClient();
         String fullUrl = url + "/" + method;
 
@@ -38,10 +50,10 @@ public class Main {
                     .build();
         } else {
             MultipartBody.Builder builder = new MultipartBody.Builder().setType(MultipartBody.FORM);
-            for (Map.Entry<String, String> parameter : params.entrySet()) {
+            for (Map.Entry<String, Object> parameter : params.entrySet()) {
                 String name = parameter.getKey();
-                String value = parameter.getValue();
-                builder.addFormDataPart(name, value);
+                Object value = parameter.getValue();
+                builder.addFormDataPart(name, toParamValue(value));
             }
             RequestBody formBody = builder.build();
             request = new Request.Builder()
@@ -82,7 +94,7 @@ public class Main {
         Integer nextUpdate = 0;
         while (true) {
             try {
-                Map<String, String> params = new HashMap<>();
+                Map<String, Object> params = new HashMap<>();
                 params.put("offset", Integer.toString(nextUpdate));
                 Response response = sendRequest(url, "getUpdates", params);
                 Gson gson = new Gson();
@@ -94,10 +106,20 @@ public class Main {
                     String text = update.message().text();
                     System.out.println("Chat id: " + chatId);
                     System.out.println(text);
-                    Map<String, String> params2 = new HashMap<>();
-                    params2.put("chat_id", Long.toString(chatId));
+
+                    InlineKeyboardMarkup keyboard = new InlineKeyboardMarkup();
+                    InlineKeyboardButton button1 = new InlineKeyboardButton("button1");
+                    button1.callbackData("/button1");
+                    InlineKeyboardButton button2 = new InlineKeyboardButton("button2");
+                    button2.callbackData("/button2");
+                    keyboard.addRow(button1);
+                    keyboard.addRow(button2);
+
+                    Map<String, Object> params2 = new HashMap<>();
+                    params2.put("chat_id", chatId);
                     params2.put("text", text);
-                    sendRequest(url, "sendMessage", params2);
+                    params2.put("reply_markup", keyboard);
+                    response = sendRequest(url, "sendMessage", params2);
 
                 }
             } catch (IOException ex) {
