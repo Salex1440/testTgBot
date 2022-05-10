@@ -1,20 +1,125 @@
+import com.fasterxml.jackson.core.JacksonException;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.UpdatesListener;
+import com.pengrad.telegrambot.model.Update;
+import com.pengrad.telegrambot.request.BaseRequest;
+import com.pengrad.telegrambot.request.GetUpdates;
 import com.pengrad.telegrambot.request.SendMessage;
+import com.pengrad.telegrambot.response.GetUpdatesResponse;
 import com.pengrad.telegrambot.response.SendResponse;
+import com.pengrad.telegrambot.response.GetChatResponse;
+import com.pengrad.telegrambot.response.GetMeResponse;
+
+import okhttp3.*;
+
+import com.google.gson.Gson;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Main {
+
+
+    public static Response sendRequest(String url, String method, Map<String, String> params) throws IOException {
+        OkHttpClient client = new OkHttpClient();
+        String fullUrl = url + "/" + method;
+
+        Request request;
+        if (params == null || params.isEmpty()) {
+            request = new Request.Builder()
+                    .url(fullUrl)
+                    .build();
+        } else {
+            MultipartBody.Builder builder = new MultipartBody.Builder().setType(MultipartBody.FORM);
+            for (Map.Entry<String, String> parameter : params.entrySet()) {
+                String name = parameter.getKey();
+                String value = parameter.getValue();
+                builder.addFormDataPart(name, value);
+            }
+            RequestBody formBody = builder.build();
+            request = new Request.Builder()
+                    .url(fullUrl)
+                    .post(formBody)
+                    .build();
+        }
+
+        Response response = null;
+        try {
+            response = client.newCall(request).execute();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+        return response;
+    }
+
 
     public static void main(String[] args) {
         System.out.println("Hello, Bot!");
 
-        TelegramBot bot = new TelegramBot("5311105948:AAG3Mgl76Vojli6Sd8N2BwdaJsCcw5yXTGY");
+        String token = "5311105948:AAG3Mgl76Vojli6Sd8N2BwdaJsCcw5yXTGY";
+
+        String url = "https://api.telegram.org/bot" + token;
+
+        // getMe request.
+        try {
+            Map<String, String> params = new HashMap<>();
+            Response response = sendRequest(url, "getMe", null);
+            Gson gson = new Gson();
+            GetMeResponse meResponse = gson.fromJson(response.body().string(), GetMeResponse.class);
+            System.out.println(meResponse.toString());
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+
+        // Simple echo server.
+        Integer nextUpdate = 0;
+        while (true) {
+            try {
+                Map<String, String> params = new HashMap<>();
+                params.put("offset", Integer.toString(nextUpdate));
+                Response response = sendRequest(url, "getUpdates", params);
+                Gson gson = new Gson();
+                GetUpdatesResponse updates = gson.fromJson(response.body().string(), GetUpdatesResponse.class);
+                for (Update update : updates.updates()) {
+                    long chatId = update.message().chat().id();
+                    Integer updateId = update.updateId();
+                    nextUpdate = updateId + 1;
+                    String text = update.message().text();
+                    System.out.println("Chat id: " + chatId);
+                    System.out.println(text);
+                    Map<String, String> params2 = new HashMap<>();
+                    params2.put("chat_id", Long.toString(chatId));
+                    params2.put("text", text);
+                    sendRequest(url, "sendMessage", params2);
+
+                }
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        }
+
+        /*OkHttpClient client = new OkHttpClient();
+        //TelegramBot bot = new TelegramBot("5311105948:AAG3Mgl76Vojli6Sd8N2BwdaJsCcw5yXTGY");
+        TelegramBot bot = new TelegramBot.
+                Builder("5311105948:AAG3Mgl76Vojli6Sd8N2BwdaJsCcw5yXTGY").
+                okHttpClient(client).
+                build();
+
 
         bot.setUpdatesListener(updates -> {
             long chatId = updates.get(0).message().chat().id();
+            System.out.println(updates.get(0).message().chat().username()
+                    + ": " + updates.get(0).message().text());
             SendResponse response = bot.execute(new SendMessage(chatId, "Hello!"));
             return UpdatesListener.CONFIRMED_UPDATES_ALL;
-        });
+        });*/
 
 
 
