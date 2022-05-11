@@ -92,42 +92,36 @@ public class Main {
 
         // Simple echo server.
         Integer nextUpdate = 0;
+        Map<String, Object> params = new HashMap<>();
         while (true) {
             try {
-                Map<String, Object> params = new HashMap<>();
+                params.clear();
                 params.put("offset", Integer.toString(nextUpdate));
                 Response response = sendRequest(url, "getUpdates", params);
                 Gson gson = new Gson();
                 GetUpdatesResponse updates = gson.fromJson(response.body().string(), GetUpdatesResponse.class);
                 for (Update update : updates.updates()) {
-
+                    Integer updateId = update.updateId();
+                    nextUpdate = updateId + 1;
                     if (update.message() != null) {
                         long chatId = update.message().chat().id();
-                        Integer updateId = update.updateId();
-                        nextUpdate = updateId + 1;
                         String text = update.message().text();
                         System.out.println("Chat id: " + chatId);
                         System.out.println(text);
 
-                        InlineKeyboardMarkup keyboard = new InlineKeyboardMarkup();
-                        InlineKeyboardButton button1 = new InlineKeyboardButton("button1");
-                        button1.callbackData("/button1");
-                        InlineKeyboardButton button2 = new InlineKeyboardButton("button2");
-                        button2.callbackData("/button2");
-                        keyboard.addRow(button1);
-                        keyboard.addRow(button2);
-
-                        Map<String, Object> params2 = new HashMap<>();
-                        params2.put("chat_id", chatId);
-                        params2.put("text", text);
-                        params2.put("reply_markup", keyboard);
-                        response = sendRequest(url, "sendMessage", params2);
+                        InlineKeyboardMarkup keyboard = createInlineKeyboard();
+                        params.clear();
+                        params.put("chat_id", chatId);
+                        params.put("text", text);
+                        params.put("reply_markup", keyboard);
+                        response = sendRequest(url, "sendMessage", params);
                     } else if (update.callbackQuery() != null) {
                         String queryId = update.callbackQuery().id();
-                        Map<String, Object> params2 = new HashMap<>();
-                        params2.put("callback_query_id", queryId);
-                        params2.put("text", "button pushed");
-                        response = sendRequest(url, "answerCallbackQuery", params2);
+                        String text = update.callbackQuery().data();
+                        params.clear();
+                        params.put("callback_query_id", queryId);
+                        params.put("text", text);
+                        response = sendRequest(url, "answerCallbackQuery", params);
                     }
                 }
             } catch (IOException ex) {
@@ -151,8 +145,16 @@ public class Main {
             return UpdatesListener.CONFIRMED_UPDATES_ALL;
         });*/
 
+    }
 
-
-
+    public static InlineKeyboardMarkup createInlineKeyboard() {
+        InlineKeyboardMarkup keyboard = new InlineKeyboardMarkup();
+        InlineKeyboardButton button1 = new InlineKeyboardButton("button1");
+        button1.callbackData("button1");
+        InlineKeyboardButton button2 = new InlineKeyboardButton("button2");
+        button2.callbackData("button2");
+        keyboard.addRow(button1);
+        keyboard.addRow(button2);
+        return keyboard;
     }
 }
