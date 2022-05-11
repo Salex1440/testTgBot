@@ -7,10 +7,7 @@ import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.UpdatesListener;
 import com.pengrad.telegrambot.model.Update;
-import com.pengrad.telegrambot.model.request.InlineKeyboardButton;
-import com.pengrad.telegrambot.model.request.InlineKeyboardMarkup;
-import com.pengrad.telegrambot.model.request.KeyboardButton;
-import com.pengrad.telegrambot.model.request.ReplyKeyboardMarkup;
+import com.pengrad.telegrambot.model.request.*;
 import com.pengrad.telegrambot.request.BaseRequest;
 import com.pengrad.telegrambot.request.GetUpdates;
 import com.pengrad.telegrambot.request.SendMessage;
@@ -30,6 +27,8 @@ import java.util.Map;
 
 public class Main {
 
+    public static final OkHttpClient client = new OkHttpClient.Builder()
+            .build();
 
     public static String toParamValue(Object obj) {
         if (obj.getClass().isPrimitive() ||
@@ -42,7 +41,6 @@ public class Main {
     }
 
     public static Response sendRequest(String url, String method, Map<String, Object> params) throws IOException {
-        OkHttpClient client = new OkHttpClient();
         String fullUrl = url + "/" + method;
 
         Request request;
@@ -137,7 +135,7 @@ public class Main {
             }
         }
 
-        /*OkHttpClient client = new OkHttpClient();
+        /*
         //TelegramBot bot = new TelegramBot("5311105948:AAG3Mgl76Vojli6Sd8N2BwdaJsCcw5yXTGY");
         TelegramBot bot = new TelegramBot.
                 Builder("5311105948:AAG3Mgl76Vojli6Sd8N2BwdaJsCcw5yXTGY").
@@ -169,7 +167,7 @@ public class Main {
     public static ReplyKeyboardMarkup createReplyKeyboard() {
         KeyboardButton button1 = new KeyboardButton("button1");
         KeyboardButton button2 = new KeyboardButton("button2");
-        KeyboardButton locationButton = new KeyboardButton("User's location");
+        KeyboardButton locationButton = new KeyboardButton("Send my current location");
         locationButton.requestLocation(true);
         ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup(button1, button2);
         keyboard.addRow(locationButton);
