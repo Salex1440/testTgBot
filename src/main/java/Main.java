@@ -9,6 +9,8 @@ import com.pengrad.telegrambot.UpdatesListener;
 import com.pengrad.telegrambot.model.Update;
 import com.pengrad.telegrambot.model.request.InlineKeyboardButton;
 import com.pengrad.telegrambot.model.request.InlineKeyboardMarkup;
+import com.pengrad.telegrambot.model.request.KeyboardButton;
+import com.pengrad.telegrambot.model.request.ReplyKeyboardMarkup;
 import com.pengrad.telegrambot.request.BaseRequest;
 import com.pengrad.telegrambot.request.GetUpdates;
 import com.pengrad.telegrambot.request.SendMessage;
@@ -106,12 +108,18 @@ public class Main {
                     if (update.message() != null) {
                         long chatId = update.message().chat().id();
                         String text = update.message().text();
+                        if (text == null) {
+                            text = update.message().location().toString();
+                        }
                         System.out.println("Chat id: " + chatId);
                         System.out.println(text);
 
-                        InlineKeyboardMarkup keyboard = createInlineKeyboard();
+                        //InlineKeyboardMarkup keyboard = createInlineKeyboard();
+                        ReplyKeyboardMarkup keyboard = createReplyKeyboard();
+
                         params.clear();
                         params.put("chat_id", chatId);
+
                         params.put("text", text);
                         params.put("reply_markup", keyboard);
                         response = sendRequest(url, "sendMessage", params);
@@ -153,8 +161,18 @@ public class Main {
         button1.callbackData("button1");
         InlineKeyboardButton button2 = new InlineKeyboardButton("button2");
         button2.callbackData("button2");
-        keyboard.addRow(button1);
-        keyboard.addRow(button2);
+        keyboard.addRow(button1, button2);
+        //keyboard.addRow(button2);
+        return keyboard;
+    }
+
+    public static ReplyKeyboardMarkup createReplyKeyboard() {
+        KeyboardButton button1 = new KeyboardButton("button1");
+        KeyboardButton button2 = new KeyboardButton("button2");
+        KeyboardButton locationButton = new KeyboardButton("User's location");
+        locationButton.requestLocation(true);
+        ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup(button1, button2);
+        keyboard.addRow(locationButton);
         return keyboard;
     }
 }
