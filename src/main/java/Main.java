@@ -24,8 +24,11 @@ import com.google.gson.Gson;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class Main {
 
@@ -68,13 +71,16 @@ public class Main {
                         long chatId = update.message().chat().id();
                         String text = update.message().text();
                         if (text == null) {
-                            text = update.message().location().toString();
                             Location location = update.message().location();
-
                             response = sendForecastRequest(location.latitude(), location.longitude());
                             text = response.body().string();
                             System.out.println(text);
                             GetForecast forecast = gson.fromJson(text, GetForecast.class);
+                            text = "Погода в " + forecast.getName() +" на данный момент: \n" +
+                                    "Сегодня " + Arrays.stream(forecast.getWeather()).collect(Collectors.toList()).get(0).getDescription() + " \n" +
+                                    "Температура: " + forecast.getMain().getTemp() + " C\n" +
+                                    "Влажность воздуха: " + forecast.getMain().getHumidity() + " \n" +
+                                    "Ветер: " + forecast.getWind().getSpeed() +" м/с\n";
                             System.out.println(forecast.getMain().toString());
                         }
                         System.out.println("Chat id: " + chatId);
@@ -85,7 +91,7 @@ public class Main {
 
                         params.clear();
                         params.put("chat_id", chatId);
-
+                        text = convertUtf8ToCp1251(text);
                         params.put("text", text);
                         params.put("reply_markup", keyboard);
                         response = sendRequest(url, "sendMessage", params);
@@ -119,6 +125,10 @@ public class Main {
             return UpdatesListener.CONFIRMED_UPDATES_ALL;
         });*/
 
+    }
+
+    public static String convertUtf8ToCp1251(String str) {
+        return new String(str.getBytes(), Charset.defaultCharset());
     }
 
     public static String toParamValue(Object obj) {
