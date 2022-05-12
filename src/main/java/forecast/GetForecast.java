@@ -5,7 +5,7 @@ import java.util.Objects;
 public class GetForecast {
 
     private Coordinates coord;
-    private Weather weather;
+    private Weather[] weather;
     private String base;
     private MainInfo main;
     private Long visibility;
@@ -25,7 +25,7 @@ public class GetForecast {
         return coord;
     }
 
-    public Weather getWeather() {
+    public Weather[] getWeather() {
         return weather;
     }
 
@@ -71,19 +71,6 @@ public class GetForecast {
 
     public Integer getCod() {
         return cod;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        GetForecast that = (GetForecast) o;
-        return coord.equals(that.coord) && Objects.equals(weather, that.weather) && Objects.equals(base, that.base) && Objects.equals(main, that.main) && Objects.equals(visibility, that.visibility) && Objects.equals(wind, that.wind) && Objects.equals(clouds, that.clouds) && Objects.equals(dt, that.dt) && Objects.equals(sys, that.sys) && Objects.equals(timezone, that.timezone) && id.equals(that.id) && Objects.equals(name, that.name) && Objects.equals(cod, that.cod);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(coord, weather, base, main, visibility, wind, clouds, dt, sys, timezone, id, name, cod);
     }
 
     @Override

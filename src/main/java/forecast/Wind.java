@@ -4,22 +4,22 @@ import java.util.Objects;
 
 public class Wind {
 
-    private Integer speed;
-    private Integer deg;
-    private Integer gust;
+    private Float speed;
+    private Float deg;
+    private Float gust;
 
     private Wind() {
     }
 
-    public Integer getSpeed() {
+    public Float getSpeed() {
         return speed;
     }
 
-    public Integer getDeg() {
+    public Float getDeg() {
         return deg;
     }
 
-    public Integer getGust() {
+    public Float getGust() {
         return gust;
     }
 

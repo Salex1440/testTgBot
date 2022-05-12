@@ -4,47 +4,47 @@ import java.util.Objects;
 
 public class MainInfo {
 
-    private Integer temp;
-    private Integer feels_like;
-    private Integer temp_min;
-    private Integer temp_max;
-    private Integer pressure;
-    private Integer humidity;
-    private Integer sea_level;
-    private Integer grnd_level;
+    private Float temp;
+    private Float feels_like;
+    private Float temp_min;
+    private Float temp_max;
+    private Float pressure;
+    private Float humidity;
+    private Float sea_level;
+    private Float grnd_level;
 
     private MainInfo() {
     }
 
-    public Integer getTemp() {
+    public Float getTemp() {
         return temp;
     }
 
-    public Integer getFeels_like() {
+    public Float getFeels_like() {
         return feels_like;
     }
 
-    public Integer getTemp_min() {
+    public Float getTemp_min() {
         return temp_min;
     }
 
-    public Integer getTemp_max() {
+    public Float getTemp_max() {
         return temp_max;
     }
 
-    public Integer getPressure() {
+    public Float getPressure() {
         return pressure;
     }
 
-    public Integer getHumidity() {
+    public Float getHumidity() {
         return humidity;
     }
 
-    public Integer getSea_level() {
+    public Float getSea_level() {
         return sea_level;
     }
 
-    public Integer getGrnd_level() {
+    public Float getGrnd_level() {
         return grnd_level;
     }
 

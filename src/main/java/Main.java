@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.UpdatesListener;
+import com.pengrad.telegrambot.model.Location;
 import com.pengrad.telegrambot.model.Update;
 import com.pengrad.telegrambot.model.request.*;
 import com.pengrad.telegrambot.request.BaseRequest;
@@ -16,6 +17,7 @@ import com.pengrad.telegrambot.response.SendResponse;
 import com.pengrad.telegrambot.response.GetChatResponse;
 import com.pengrad.telegrambot.response.GetMeResponse;
 
+import forecast.GetForecast;
 import okhttp3.*;
 
 import com.google.gson.Gson;
@@ -29,47 +31,6 @@ public class Main {
 
     public static final OkHttpClient client = new OkHttpClient.Builder()
             .build();
-
-    public static String toParamValue(Object obj) {
-        if (obj.getClass().isPrimitive() ||
-                obj.getClass().isEnum() ||
-                obj.getClass().getName().startsWith("java.lang")) {
-            return String.valueOf(obj);
-        }
-        Gson gson = new Gson();
-        return gson.toJson(obj);
-    }
-
-    public static Response sendRequest(String url, String method, Map<String, Object> params) throws IOException {
-        String fullUrl = url + "/" + method;
-
-        Request request;
-        if (params == null || params.isEmpty()) {
-            request = new Request.Builder()
-                    .url(fullUrl)
-                    .build();
-        } else {
-            MultipartBody.Builder builder = new MultipartBody.Builder().setType(MultipartBody.FORM);
-            for (Map.Entry<String, Object> parameter : params.entrySet()) {
-                String name = parameter.getKey();
-                Object value = parameter.getValue();
-                builder.addFormDataPart(name, toParamValue(value));
-            }
-            RequestBody formBody = builder.build();
-            request = new Request.Builder()
-                    .url(fullUrl)
-                    .post(formBody)
-                    .build();
-        }
-
-        Response response = null;
-        try {
-            response = client.newCall(request).execute();
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
-        return response;
-    }
 
 
     public static void main(String[] args) {
@@ -108,6 +69,13 @@ public class Main {
                         String text = update.message().text();
                         if (text == null) {
                             text = update.message().location().toString();
+                            Location location = update.message().location();
+
+                            response = sendForecastRequest(location.latitude(), location.longitude());
+                            text = response.body().string();
+                            System.out.println(text);
+                            GetForecast forecast = gson.fromJson(text, GetForecast.class);
+                            System.out.println(forecast.getMain().toString());
                         }
                         System.out.println("Chat id: " + chatId);
                         System.out.println(text);
@@ -151,6 +119,62 @@ public class Main {
             return UpdatesListener.CONFIRMED_UPDATES_ALL;
         });*/
 
+    }
+
+    public static String toParamValue(Object obj) {
+        if (obj.getClass().isPrimitive() ||
+                obj.getClass().isEnum() ||
+                obj.getClass().getName().startsWith("java.lang")) {
+            return String.valueOf(obj);
+        }
+        Gson gson = new Gson();
+        return gson.toJson(obj);
+    }
+
+    public static Response sendRequest(String url, String method, Map<String, Object> params) throws IOException {
+        String fullUrl = url + "/" + method;
+
+        Request request;
+        if (params == null || params.isEmpty()) {
+            request = new Request.Builder()
+                    .url(fullUrl)
+                    .build();
+        } else {
+            MultipartBody.Builder builder = new MultipartBody.Builder().setType(MultipartBody.FORM);
+            for (Map.Entry<String, Object> parameter : params.entrySet()) {
+                String name = parameter.getKey();
+                Object value = parameter.getValue();
+                builder.addFormDataPart(name, toParamValue(value));
+            }
+            RequestBody formBody = builder.build();
+            request = new Request.Builder()
+                    .url(fullUrl)
+                    .post(formBody)
+                    .build();
+        }
+
+        Response response = null;
+        try {
+            response = client.newCall(request).execute();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+        return response;
+    }
+
+    public static Response sendForecastRequest(Float lat, Float lon) {
+        String fullUrl = "https://api.openweathermap.org/data/2.5/weather?lat=" + lat
+                + "&lon=" + lon + "&appid=dddfdea0e0de9a44f80c53ce7a6b2429&lang=ru&units=metric";
+        Request request = new Request.Builder()
+                .url(fullUrl)
+                .build();
+        Response response = null;
+        try {
+            response = client.newCall(request).execute();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+        return response;
     }
 
     public static InlineKeyboardMarkup createInlineKeyboard() {
