@@ -24,7 +24,9 @@ import com.google.gson.Gson;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -76,12 +78,26 @@ public class Main {
                             text = response.body().string();
                             System.out.println(text);
                             GetForecast forecast = gson.fromJson(text, GetForecast.class);
-                            text = "Погода в " + forecast.getName() +" на данный момент: \n" +
-                                    "Сегодня " + Arrays.stream(forecast.getWeather()).collect(Collectors.toList()).get(0).getDescription() + " \n" +
-                                    "Температура: " + forecast.getMain().getTemp() + " C\n" +
-                                    "Влажность воздуха: " + forecast.getMain().getHumidity() + " \n" +
-                                    "Ветер: " + forecast.getWind().getSpeed() +" м/с\n";
-                            System.out.println(forecast.getMain().toString());
+                            String format = new String(
+                                    ("В %s %s%n" +
+                                    "Температура воздуха %.2f C%n" +
+                                    "Влажность воздуха %.2f%% %n" +
+                                    "Ветер %.2f м/с%n").getBytes(),
+                                    "UTF-8");
+                            text = String.format(format,
+                                    forecast.getName(),
+                                    Arrays.stream(forecast.getWeather()).collect(Collectors.toList()).get(0).getDescription(),
+                                    forecast.getMain().getTemp(),
+                                    forecast.getMain().getHumidity(),
+                                    forecast.getWind().getSpeed()
+                                    );
+                            /*
+                            String name = forecast.getName();
+                            String foo = new String("Одинцово".getBytes(), "UTF-8");
+                            String f = new String("Нечто %s".getBytes(), "UTF-8");
+                            String bar = String.format(f, name);
+                            */
+                            //System.out.println(forecast.getMain().toString());
                         }
                         System.out.println("Chat id: " + chatId);
                         System.out.println(text);
@@ -91,7 +107,7 @@ public class Main {
 
                         params.clear();
                         params.put("chat_id", chatId);
-                        text = convertUtf8ToCp1251(text);
+                        //text = convertUtf8ToCp1251(text);
                         params.put("text", text);
                         params.put("reply_markup", keyboard);
                         response = sendRequest(url, "sendMessage", params);
@@ -125,10 +141,6 @@ public class Main {
             return UpdatesListener.CONFIRMED_UPDATES_ALL;
         });*/
 
-    }
-
-    public static String convertUtf8ToCp1251(String str) {
-        return new String(str.getBytes(), Charset.defaultCharset());
     }
 
     public static String toParamValue(Object obj) {
@@ -198,13 +210,11 @@ public class Main {
         return keyboard;
     }
 
-    public static ReplyKeyboardMarkup createReplyKeyboard() {
-        KeyboardButton button1 = new KeyboardButton("button1");
-        KeyboardButton button2 = new KeyboardButton("button2");
-        KeyboardButton locationButton = new KeyboardButton("Send my current location");
+    public static ReplyKeyboardMarkup createReplyKeyboard() throws UnsupportedEncodingException {
+        String label = new String("Какая сейчас погода?".getBytes(), "UTF-8");
+        KeyboardButton locationButton = new KeyboardButton(label);
         locationButton.requestLocation(true);
-        ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup(button1, button2);
-        keyboard.addRow(locationButton);
+        ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup(locationButton);
         return keyboard;
     }
 }
